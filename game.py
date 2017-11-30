@@ -8,7 +8,6 @@ class Game_State(enum.Enum):
     READY = enum.auto()
     FALLING = enum.auto()
     LANDED = enum.auto()#landed but not frozen
-    FROZEN = enum.auto()#frozen but not cleared
     MATCHED = enum.auto()
     OVER = enum.auto()
     
@@ -25,7 +24,7 @@ class Column():
         self.column = column
         self.fallen = 1#the distance this column has fallen
     def rotate(self) -> None:
-        self.contents.rotate(1)
+        self.contents = self.contents[1:] + [self.contents[0]]
 class Game:
     """A class represeting an instance of the game"""
     
@@ -34,25 +33,29 @@ class Game:
         self.board = [[Space(element) for element in row] for row in board]
         self.column = None
         
-    def make_column(self, column:[int]) -> None:
+    def make_column(self, content:[int], column) -> None:
         if(self.state != Game_State.READY):
             raise ArgumentException("Not ready for a column")
-        if(len(column) != 3):
+        if(len(content) != 3):
             raise ArgumentException("Wrong length")
-        self.column = Column(column)
+        self.column = Column(column, content)
+        self.state = Game_State.FALLING
     
     def move_col_right(self) -> None:
+        print(self.column.column)
         if(self.state != Game_State.FALLING):
             raise ArgumentException("No column to shift right")
-        if(self.column.column == len(board)):
+        if(self.column.column == len(self.board)):
             return
         if(self.column.fallen == 1):
-            if(board[0][column.column + 1].content != None):
+            if(self.column.column == len(self.board[0])-1 or self.board[0][self.column.column + 1].content != 0):
+                print("moving blocked")
                 return
             else:
                 self.column.column = self.column.column + 1
         elif(self.column.fallen == 2):
-            if(board[0][column.column + 1].content != None or board[1][column.column + 1].content != None):
+            if(self.column.column == len(self.board[0])-1 or self.board[0][self.column.column + 1].content != 0 or self.board[1][self.column.column + 1].content != 0):
+                print("moving blocked")
                 return
             else:
                 self.column.column = self.column.column + 1
@@ -61,22 +64,22 @@ class Game:
     def move_col_left(self) -> None:
         if(self.state != Game_State.FALLING):
             raise ArgumentException("No column to shift left")
-        if(self.column.column == len(board)):
+        if(self.column.column == len(self.board)):
             return
         if(self.column.fallen == 1):
-            if(board[0][column.column - 1].content != None):
+            if(self.column.column ==0 or  self.board[0][self.column.column - 1].content != None):
                 return
             else:
-                self.column.column = self.column.column + 1
+                self.column.column = self.column.column - 1
         elif(self.column.fallen == 2):
-            if(board[0][column.column - 1].content != None or board[1][column.column - 1].content != None):
+            if(self.column.column == 0 or self.board[0][self.column.column - 1].content != None or self.board[1][self.column.column - 1].content != None):
                 return
             else:
-                self.column.column = self.column.column + 1
+                self.column.column = self.column.column - 1
         else:
             pass
     
-    def tick(self):
+    def tick(self) -> None:
         if(self.state == Game_State.READY):
             pass
         elif(self.state == Game_State.FALLING):
@@ -87,14 +90,42 @@ class Game:
             self.frozen()
         elif(self.state == Game_State.MATCHED):
             self.matched()
-            
-    def fall(self):
-        pass
-    def landed(self):
-        pass
-    def frozen(self):
-        pass
+
+    def rotate(self) -> None:
+        self.column.rotate()
+    def fall(self) -> None:
+        print("fallen: " + str(self.column.fallen))
+        print(self.column.fallen < len(self.board))
+        if((self.column.fallen < len(self.board)) and ((self.board[self.column.fallen][self.column.column].content == 0) or (self.board[self.column.fallen][self.column.column].content == None))):
+            self.column.fallen = self.column.fallen + 1
+        else:
+            if(self.column.fallen < 3):
+                self.state = Game_State.OVER
+            else:
+                self.state = Game_State.LANDED
+    def landed(self) -> None:
+        changed_spaces = []
+        for i in range(3):
+            self.board[self.column.fallen-3 + i][self.column.column] = Space(self.column.contents[1])
+            changed_spaces.append((self.column.fallen-3 + i, self.column.column))
+        #matching code
+        for coord in changed_spaces:
+            self.check_matches(coord)
+
+
+        
+
+
+        self.column = None
+        if(matches):
+            self.state = Game_State.MATCHED
+        else:
+            self.state = Game_State.READY
     def matched(self):
+        pass
+
+
+    def check_matches(self, coord: ()) -> None:
         pass
     
 def make_game(rows:int, cols:int) -> Game:
