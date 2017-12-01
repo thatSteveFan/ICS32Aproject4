@@ -45,16 +45,16 @@ class Game:
         print(self.column.column)
         if(self.state != Game_State.FALLING):
             raise ArgumentException("No column to shift right")
-        if(self.column.column == len(self.board)):
+        if(self.column.column == len(self.board[0])-1):
             return
         if(self.column.fallen == 1):
-            if(self.column.column == len(self.board[0])-1 or self.board[0][self.column.column + 1].content != 0):
+            if(self.board[0][self.column.column + 1].content != 0):
                 print("moving blocked")
                 return
             else:
                 self.column.column = self.column.column + 1
         elif(self.column.fallen == 2):
-            if(self.column.column == len(self.board[0])-1 or self.board[0][self.column.column + 1].content != 0 or self.board[1][self.column.column + 1].content != 0):
+            if(self.board[0][self.column.column + 1].content != 0 or self.board[1][self.column.column + 1].content != 0):
                 print("moving blocked")
                 return
             else:
@@ -64,15 +64,15 @@ class Game:
     def move_col_left(self) -> None:
         if(self.state != Game_State.FALLING):
             raise ArgumentException("No column to shift left")
-        if(self.column.column == len(self.board)):
+        if(self.column.column == 0):
             return
         if(self.column.fallen == 1):
-            if(self.column.column ==0 or  self.board[0][self.column.column - 1].content != None):
+            if(self.board[0][self.column.column - 1].content != None):
                 return
             else:
                 self.column.column = self.column.column - 1
         elif(self.column.fallen == 2):
-            if(self.column.column == 0 or self.board[0][self.column.column - 1].content != None or self.board[1][self.column.column - 1].content != None):
+            if(self.board[0][self.column.column - 1].content != None or self.board[1][self.column.column - 1].content != None):
                 return
             else:
                 self.column.column = self.column.column - 1
