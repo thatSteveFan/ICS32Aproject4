@@ -3,12 +3,25 @@ import game as game_py
 import re
 
 def main():
+    """The main method containing the main loop."""
     rows = int(input())
     cols = int(input())
     
-    game = game_py.make_game(rows, cols)
-    while(game.state != game_py.Game_State.OVER):
+    start = input()
+    if(start == "EMPTY"):
+        game = game_py.make_game(rows, cols)
+    elif(start == "CONTENTS"):
+        requested_array = []
+        for i in range(rows):
+            requested_array.append(list(input()))
+        translated_array = [[(ord(char) - 64) for char in row] for row in requested_array]
+        game = game_py.Game(translated_array)
+    
+    while(1):
         print(game_to_str(game))
+        if(game.state == game_py.Game_State.OVER):
+            print("GAME OVER")
+            break
         input_str = input()
         if(input_str == ""):
             game.tick()
@@ -22,12 +35,14 @@ def main():
             game.rotate()
         elif(re.match(r"F \d [A-J] [A-J] [A-J]", input_str)):
             game.make_column([ord(input_str[4]) - 64,ord(input_str[6]) - 64,ord(input_str[8]) - 64], int(input_str[2]) - 1)
-    print("GAME OVER")
+            
+        
+    
         
 def game_to_str(game: game_py.Game) -> str:
     """Changes the internal integer representation of the board to an array of strings"""
     board_stringed = [(["|"] + [(space_to_str(space)) for space in row] + ["|"]) for row in game.board]
-    board_stringed.append([" "] + ["---" for n in range(len(game.board))]+ [" "])
+    board_stringed.append([" "] + ["---" for n in range(len(game.board[0]))]+ [" "])
 
     if(game.column != None):
         colstrs = col_to_strs(game.column, game.state)
@@ -52,6 +67,7 @@ def space_to_str(space: game_py.Space) -> str:
             around = " "
         return around + chr(space.content + 64) + around
 
-STATE_TO_SURROUNDING_CHR = {game_py.Game_State.FALLING: ("[", "]"), game_py.Game_State.LANDED: ("|", "|")}
+STATE_TO_SURROUNDING_CHR = {game_py.Game_State.FALLING: ("[", "]"), game_py.Game_State.LANDED: ("|", "|"), game_py.Game_State.OVER: ("|", "|")}
 def col_to_strs(col: game_py.Column, state: game_py.Game_State) -> [str]:
+    """Turns the falling column into an array of strings"""
     return ["" + (STATE_TO_SURROUNDING_CHR[state][0] + chr(gem + 64) + STATE_TO_SURROUNDING_CHR[state][1]) for gem in col.contents]
